@@ -1,0 +1,45 @@
+import urllib2
+import bs4
+import smtplib
+import email
+
+# URL to read
+url_to_scrape = "http://slickdeals.com"
+found_deal = ''
+
+# Reading the source URL
+read_source_url = urllib2.urlopen(url_to_scrape).read()
+soup = bs4.BeautifulSoup(read_source_url)
+
+# Extracting the deals
+for tag in soup.findAll("div", {'class': 'itemBottomRow'}):
+    for score in tag.findAll('span', {'role': 'thread.score'}):
+        if int(score.text) > 70: # If a deal has more than 70 upvotes, it is added to the list
+            found_deal += '\n' + 'Upvotes:   ' + score.text
+            found_deal += '\n' 'Deal Title:   '+ tag.find("div")['data-threadtitle'] + '\n'
+            for url in tag.findAll("div", {'class': 'comments track-fpDealLink'}):
+                found_deal += 'Deal Url:   ' + 'http://slickdeals.net' + url['data-href'] + '\n'
+
+# Final deals
+found_deal += '\n' + '\n' + 'XOXO - Your Py Script'
+
+# Sending email
+delas_list = found_deal.encode('utf-8')
+
+# Creating email object
+msg = email.message_from_string(delas_list)
+
+# Message meta data
+msg['From'] = "from@hotmail.com"
+msg['To'] = "to@gmail.com"
+msg['Subject'] = "Grab Some Deals - Your Py Script"
+
+# Sending email
+email = smtplib.SMTP("smtp.live.com",587)
+email.ehlo()
+email.starttls()
+email.ehlo()
+email.login('username@hotmail.com', 'password')
+email.sendmail("to_address@gmail.com", "to_address@hotmail.com", msg.as_string())
+email.quit()
+
